@@ -83,7 +83,9 @@ def main():
     color_1 = get_random_color()
     color_2 = get_random_color()
     create_test_file(test_file, n=15, start_color=color_1, end_color=color_2)
-    print(convert_color_array_to_string(read_file(test_file)))
+
+    color_info = read_file(test_file)
+    print(convert_color_array_to_string(color_info))
 
 
 if __name__ == "__main__":
