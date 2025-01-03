@@ -3,6 +3,9 @@
 import random
 from pathlib import Path
 
+import numpy as np
+from PIL import Image
+
 
 def create_color_gradient(
     n: int,
@@ -27,7 +30,7 @@ def create_color_gradient(
             row.append((int(r), int(g), int(b)))
         gradient.append(row)
 
-    return gradient
+    return np.array(gradient)
 
 
 def create_test_file(
@@ -38,35 +41,20 @@ def create_test_file(
 ) -> Path:
     """Create a simple image file with a color gradient."""
     color_gradient = create_color_gradient(n, start_color, end_color)
-    with output_path.open("w") as file:
-        for row in color_gradient:
-            out = ""
-            for tup in row:
-                r, g, b = tup
-                out += f"({r},{g},{b}), "
-            out = out[:-2] + "\n"
-            file.write(out)
-    return output_path
+    image = Image.fromarray(color_gradient)
+    image.save(output_path)
 
 
-def read_file(file_path: Path):
+def read_file(file_path: Path) -> np.ndarray:
     """Read a file that contains colors."""
-    with file_path.open("r") as file:
-        out = []
-        for line in file:
-            curr_row = []
-            rgb_triplets = line.strip().split(", ")
-            for triplet in rgb_triplets:
-                r, g, b = triplet.lstrip("(").rstrip(")").split(",")
-                curr_row.append((int(r), int(g), int(b)))
-            out.append(curr_row)
-        return out
+    return np.array(Image.open(file_path))
 
 
-def convert_color_array_to_string(color_array: list[list[tuple[int, int, int]]]) -> str:
+def convert_color_array_to_string(color_array: np.ndarray) -> str:
     """Construct a string based on 24-bit TrueColor from a 2D list of colors."""
     string_representation = [
-        [f"\033[48;2;{r};{g};{b}m  \033[0m" for (r, g, b) in row] for row in color_array
+        [f"\033[48;2;{r};{g};{b}m  \033[0m" for (r, g, b, a) in row]
+        for row in color_array
     ]
     rows = ["".join(row) for row in string_representation]
     return "\n".join(rows)
@@ -79,11 +67,7 @@ def get_random_color() -> tuple[int, int, int]:
 
 def main():
     """Entry point."""
-    test_file = Path("data/test")
-    color_1 = get_random_color()
-    color_2 = get_random_color()
-    create_test_file(test_file, n=15, start_color=color_1, end_color=color_2)
-
+    test_file = Path("data/48px-Cat_1.png")
     color_info = read_file(test_file)
     print(convert_color_array_to_string(color_info))
 
