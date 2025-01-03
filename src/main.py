@@ -1,5 +1,6 @@
 """Playing with colors."""
 
+import random
 from pathlib import Path
 
 
@@ -8,22 +9,7 @@ def create_color_gradient(
     start_color: tuple[int, int, int] = (0, 0, 0),
     end_color: tuple[int, int, int] = (255, 255, 255),
 ):
-    """Create an n x n array of tuples representing a color gradient.
-
-    Parameters
-    ----------
-    n : int
-        Size of the grid (n x n).
-    start_color : tuple of int, optional
-        RGB tuple for the starting color (default is (0, 0, 0)).
-    end_color : tuple of int, optional
-        RGB tuple for the ending color (default is (255, 255, 255)).
-
-    Returns
-    -------
-    list of list of tuple
-        A nested list of shape (n, n) containing RGB tuples.
-    """
+    """Create an n x n array of tuples representing a color gradient."""
     gradient = []
 
     for i in range(n):
@@ -49,7 +35,7 @@ def create_test_file(
     n: int = 5,
     start_color: tuple[int, int, int] = (0, 0, 0),
     end_color: tuple[int, int, int] = (255, 255, 255),
-):
+) -> Path:
     """Create a simple image file with a color gradient."""
     color_gradient = create_color_gradient(n, start_color, end_color)
     with output_path.open("w") as file:
@@ -60,11 +46,12 @@ def create_test_file(
                 out += f"({r},{g},{b}), "
             out = out[:-2] + "\n"
             file.write(out)
+    return output_path
 
 
-def read_file(input_path: Path):
+def read_file(file_path: Path):
     """Read a file that contains colors."""
-    with input_path.open("r") as file:
+    with file_path.open("r") as file:
         out = []
         for line in file:
             curr_row = []
@@ -76,29 +63,27 @@ def read_file(input_path: Path):
         return out
 
 
-def print_color_gradient(gradient):
-    """
-    Print the color gradient as colored squares to the terminal.
+def convert_color_array_to_string(color_array: list[list[tuple[int, int, int]]]) -> str:
+    """Construct a string based on 24-bit TrueColor from a 2D list of colors."""
+    string_representation = [
+        [f"\033[48;2;{r};{g};{b}m  \033[0m" for (r, g, b) in row] for row in color_array
+    ]
+    rows = ["".join(row) for row in string_representation]
+    return "\n".join(rows)
 
-    Parameters
-    ----------
-    gradient : list of list of tuple
-        The gradient to print, where each tuple represents an RGB color.
-    """
-    for row in gradient:
-        for color in row:
-            r, g, b = color
-            print(f"\033[48;2;{r};{g};{b}m  \033[0m", end="")
-        print()
+
+def get_random_color() -> tuple[int, int, int]:
+    """Create a random rgb color."""
+    return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
 def main():
     """Entry point."""
     test_file = Path("data/test")
-    create_test_file(
-        test_file, n=10, start_color=(100, 20, 30), end_color=(200, 230, 180)
-    )
-    print_color_gradient(read_file(test_file))
+    color_1 = get_random_color()
+    color_2 = get_random_color()
+    create_test_file(test_file, n=15, start_color=color_1, end_color=color_2)
+    print(convert_color_array_to_string(read_file(test_file)))
 
 
 if __name__ == "__main__":
