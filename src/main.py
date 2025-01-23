@@ -1,6 +1,9 @@
 """Playing with colors."""
 
 import random
+import json
+import io
+import base64
 from pathlib import Path
 
 import numpy as np
@@ -65,6 +68,13 @@ def get_random_color() -> tuple[int, int, int]:
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 
+def read_base64_encoded_png(base_64_encoded_png: str) -> np.ndarray:
+    """Decode a base64 encoded string into a 2D array of colors."""
+    image_data = base64.b64decode(base_64_encoded_png)
+    img = Image.open(io.BytesIO(image_data))
+    return np.array(img)
+
+
 def main():
     """Entry point."""
     test_file = Path("data/blue_chicken.png")
@@ -83,7 +93,21 @@ def main():
         ypos * col_width : (ypos + 1) * col_width,
     ]
 
-    print(convert_color_array_to_string(color_info))
+    base64_encoded_png_strings = []
+    with Path("data/merged.json").open("r") as file:
+        content = json.loads(file.read())
+        for stardew_item in content:
+            image_data = stardew_item["image"]
+            image_id = stardew_item["id"]
+            image_name = stardew_item["names"]["data-en-US"]
+            base64_encoded_png_strings.append((image_name, image_data, image_id))
+
+    random_image = random.choice(base64_encoded_png_strings)
+    name = random_image[0]
+    data = random_image[1]
+    id = random_image[2]
+    print(f"{id}: {name}")
+    print(convert_color_array_to_string(read_base64_encoded_png(data)))
 
 
 if __name__ == "__main__":
