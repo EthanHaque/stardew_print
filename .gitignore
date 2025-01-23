@@ -103,3 +103,7 @@ cython_debug/
 # DS_Store from Mac OS
 .DS_Store
 src/.DS_Store
+
+
+# devenv configuration
+.devenv
