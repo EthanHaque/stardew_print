@@ -53,7 +53,7 @@ def read_file(file_path: Path) -> np.ndarray:
 def convert_color_array_to_string(color_array: np.ndarray) -> str:
     """Construct a string based on 24-bit TrueColor from a 2D list of colors."""
     string_representation = [
-        [f"\033[48;2;{r};{g};{b}m  \033[0m" for (r, g, b, a) in row]
+        [f"\033[48;2;{r};{g};{b};{a}m  \033[0m" for (r, g, b, a) in row]
         for row in color_array
     ]
     rows = ["".join(row) for row in string_representation]
@@ -67,8 +67,22 @@ def get_random_color() -> tuple[int, int, int]:
 
 def main():
     """Entry point."""
-    test_file = Path("data/48px-Cat_1.png")
+    test_file = Path("data/blue_chicken.png")
     color_info = read_file(test_file)
+    height, width = color_info.shape[:2]
+
+    rows, cols = 7, 4
+
+    xpos = random.randint(0, rows - 1)
+    ypos = random.randint(0, cols - 1)
+
+    row_height = height // rows
+    col_width = width // cols
+    color_info = color_info[
+        xpos * row_height : (xpos + 1) * row_height,
+        ypos * col_width : (ypos + 1) * col_width,
+    ]
+
     print(convert_color_array_to_string(color_info))
 
 
