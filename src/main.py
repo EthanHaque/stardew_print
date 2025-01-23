@@ -27,6 +27,10 @@ def convert_2D_color_array_to_truecolor_string(
         Singular string where each pixel in the original image has been converted
         to a 24-bit TrueColor printable substring and concatenated together.
     """
+    if color_array.shape[-1] != 4:
+        msg = f"Expected last dimension of color_array to have size 4. Has size {color_array.shape[-1]}"
+        raise ValueError(msg)
+
     string_representation = [
         [f"\033[48;2;{r};{g};{b};{a}m  \033[0m" for (r, g, b, a) in row]
         for row in color_array
