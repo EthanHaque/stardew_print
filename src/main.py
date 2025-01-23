@@ -7,15 +7,18 @@ import random
 from pathlib import Path
 
 import numpy as np
+from numpy.typing import NDArray
 from PIL import Image
 
 
-def convert_2D_color_array_to_truecolor_string(color_array: np.ndarray) -> str:
+def convert_2D_color_array_to_truecolor_string(
+    color_array: NDArray[np.uint8],
+) -> str:
     """Construct a string based on 24-bit TrueColor from a 2D array of rgba colors.
 
     Parameters
     ----------
-    color_array : np.ndarray
+    color_array : NDArray
         Array with shape (h, w, 4). Last dimension is rgba format.
 
     Returns
@@ -32,7 +35,7 @@ def convert_2D_color_array_to_truecolor_string(color_array: np.ndarray) -> str:
     return "\n".join(rows)
 
 
-def read_base64_encoded_png(base_64_encoded_png: str) -> np.ndarray:
+def read_base64_encoded_png(base_64_encoded_png: str) -> NDArray[np.uint8]:
     """Decode a base64 encoded png string into an image.
 
     Parameters
@@ -42,7 +45,7 @@ def read_base64_encoded_png(base_64_encoded_png: str) -> np.ndarray:
 
     Returns
     -------
-    np.ndarray
+    NDArray
         Array with shape (h, w, c) where c is the number of channels in the image.
     """
     image_data = base64.b64decode(base_64_encoded_png)
@@ -50,7 +53,7 @@ def read_base64_encoded_png(base_64_encoded_png: str) -> np.ndarray:
     return np.array(img)
 
 
-def main():
+def main() -> None:
     """Entry point."""
     with Path("data/merged.json").open("r") as file:
         content = json.loads(file.read())
