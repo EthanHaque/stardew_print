@@ -11,6 +11,19 @@ from numpy.typing import NDArray
 from PIL import Image
 
 
+def get_ansi_color_escape_code(r, g, b, background=True):
+    """"""
+    set_as_background = 48
+    set_as_foreground = 38
+    mode = set_as_background if background else set_as_foreground
+    return f"\033[{mode};2;{r};{g};{b}m"
+
+
+def get_ansi_reset_style_code():
+    """"""
+    return "\033[0m"
+
+
 def convert_2D_color_array_to_truecolor_string(
     color_array: NDArray[np.uint8],
 ) -> str:
@@ -27,16 +40,31 @@ def convert_2D_color_array_to_truecolor_string(
         Singular string where each pixel in the original image has been converted
         to a 24-bit TrueColor printable substring and concatenated together.
     """
+    visible_pixel_char = "  "
+    invisible_pixel_char = "  "
+    reset_code = get_ansi_reset_style_code()
+
     if color_array.shape[-1] != 4:
         msg = f"Expected last dimension of color_array to have size 4. Has size {color_array.shape[-1]}"
         raise ValueError(msg)
 
-    string_representation = [
-        [f"\033[48;2;{r};{g};{b};{a}m  \033[0m" for (r, g, b, a) in row]
-        for row in color_array
-    ]
-    rows = ["".join(row) for row in string_representation]
-    return "\n".join(rows)
+    string_representation = []
+    for row in color_array:
+        for pixel in row:
+            r, g, b, a = pixel
+            if a:
+                pixel_color = get_ansi_color_escape_code(r, g, b)
+                next_char = f"{pixel_color}{visible_pixel_char}"
+            else:
+                next_char = invisible_pixel_char
+
+            if string_representation[-2] != pixel_color:
+                string_representation.append(reset_code)
+
+            string_representation.append(next_char)
+        string_representation.append("\n")
+
+    return "".join(string_representation)
 
 
 def read_base64_encoded_png(base_64_encoded_png: str) -> NDArray[np.uint8]:
@@ -54,7 +82,7 @@ def read_base64_encoded_png(base_64_encoded_png: str) -> NDArray[np.uint8]:
     """
     image_data = base64.b64decode(base_64_encoded_png)
     img = Image.open(io.BytesIO(image_data))
-    return np.array(img)
+    return np.array(img, dtype=np.uint8)
 
 
 def main() -> None:
