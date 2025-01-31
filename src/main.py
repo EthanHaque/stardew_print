@@ -121,6 +121,37 @@ def convert_2D_color_array_to_truecolor_string(
     return "".join(string_representation)
 
 
+def write_truecolor_string(path: Path, truecolor_string: str) -> None:
+    """Write a truecolor string to a file.
+
+    Parameters
+    ----------
+    path : Path
+        Path to write the string to.
+    truecolor_string : str
+        A string with proper ANSI escape codes for colors.
+    """
+    with path.open("w") as file:
+        file.write(truecolor_string)
+
+
+def read_truecolor_string(path: Path) -> str:
+    """Read truecolor string from a file.
+
+    Parameters
+    ----------
+    path : Path
+        Path to file containing truecolor string.
+
+    Returns
+    -------
+    str
+        String with ANSI escape codes for printing colors to the terminal.
+    """
+    with path.open("r") as file:
+        return file.read()
+
+
 def read_image(path: Path) -> NDArray[np.uint8]:
     """Read an image from the given path and converts it to an RGBA numpy array.
 
