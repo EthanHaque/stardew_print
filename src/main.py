@@ -47,6 +47,37 @@ def get_ansi_reset_style_code():
     return "\033[0m"
 
 
+def crop_to_content(color_array: NDArray[np.uint8]) -> NDArray[np.uint8]:
+    """
+    Crops a 2D color array to the bounding box containing all non-zero content.
+
+    Parameters
+    ----------
+    color_array : NDArray
+        Array with shape (h, w, 4). Last dimension is rgba format.
+
+    Returns
+    -------
+    NDArray
+        Cropped array containing only the bounding box with non-zero content.
+    """
+    if color_array.shape[-1] != 4:
+        msg = f"Expected last dimension of color_array to have size 4. Got {color_array.shape[-1]}"
+        raise ValueError(msg)
+
+    alpha_channel = color_array[..., 3]
+
+    # Find the bounding box where alpha is non-zero
+    rows = np.any(alpha_channel != 0, axis=1)
+    cols = np.any(alpha_channel != 0, axis=0)
+
+    # Get the indices of the bounding box
+    row_start, row_end = np.where(rows)[0][[0, -1]]
+    col_start, col_end = np.where(cols)[0][[0, -1]]
+
+    return color_array[row_start : row_end + 1, col_start : col_end + 1]
+
+
 def convert_2D_color_array_to_truecolor_string(
     color_array: NDArray[np.uint8],
 ) -> str:
@@ -76,18 +107,36 @@ def convert_2D_color_array_to_truecolor_string(
         for pixel in row:
             r, g, b, a = pixel
             if a:
-                pixel_color = get_ansi_color_escape_code(r, g, b)
-                next_char = f"{pixel_color}{visible_pixel_char}"
+                pixel_color = get_ansi_color_code(r, g, b)
+                # TODO: Don't always need the reset code. Can make strings smaller.
+                next_char = f"{pixel_color}{visible_pixel_char}{reset_code}"
             else:
                 next_char = invisible_pixel_char
-
-            if string_representation[-2] != pixel_color:
-                string_representation.append(reset_code)
-
             string_representation.append(next_char)
+
         string_representation.append("\n")
 
+    string_representation += reset_code
     return "".join(string_representation)
+
+
+def read_image(path: Path) -> NDArray[np.uint8]:
+    """Read an image from the given path and converts it to an RGBA numpy array.
+
+    Parameters
+    ----------
+    path : Path
+        Path to the image file.
+
+    Returns
+    -------
+    NDArray
+        Image as a numpy array with shape (h, w, 4) in RGBA format.
+    """
+    image = Image.open(path)
+    if image.mode != "RGBA":
+        image = image.convert("RGBA")
+    return np.array(image, dtype=np.uint8)
 
 
 def read_base64_encoded_png(base_64_encoded_png: str) -> NDArray[np.uint8]:
@@ -101,11 +150,13 @@ def read_base64_encoded_png(base_64_encoded_png: str) -> NDArray[np.uint8]:
     Returns
     -------
     NDArray
-        Array with shape (h, w, c) where c is the number of channels in the image.
+        Array with shape (height, width, channels).
     """
     image_data = base64.b64decode(base_64_encoded_png)
-    img = Image.open(io.BytesIO(image_data))
-    return np.array(img, dtype=np.uint8)
+    image = Image.open(io.BytesIO(image_data))
+    if image.mode != "RGBA":
+        image = image.convert("RGBA")
+    return np.array(image, dtype=np.uint8)
 
 
 def main() -> None:
@@ -117,12 +168,12 @@ def main() -> None:
         sprite_id = random_sprite["id"]
         sprite_name = random_sprite["names"]["data-en-US"]
 
-    print(f"{sprite_id}: {sprite_name}")
-    print(
-        convert_2D_color_array_to_truecolor_string(
-            read_base64_encoded_png(base64_encoded_sprite_png)
-        )
-    )
+    image_array = read_base64_encoded_png(base64_encoded_sprite_png)
+    cropped_image_array = crop_to_content(image_array)
+    colored_string = convert_2D_color_array_to_truecolor_string(cropped_image_array)
+
+    print(f"{sprite_id}: {sprite_name}\n")
+    print(colored_string)
 
 
 if __name__ == "__main__":
