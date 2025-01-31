@@ -2,6 +2,7 @@
 
 import base64
 import io
+import os
 import json
 import random
 from pathlib import Path
@@ -161,6 +162,10 @@ def read_base64_encoded_png(base_64_encoded_png: str) -> NDArray[np.uint8]:
 
 def main() -> None:
     """Entry point."""
+    color_support = os.environ.get("COLORTERM", "")
+    if color_support != "truecolor" and color_support != "24bit":
+        print("Warning: colors may not display properly.")
+
     with Path("data/merged.json").open("r") as file:
         content = json.loads(file.read())
         random_sprite = random.choice(content)
