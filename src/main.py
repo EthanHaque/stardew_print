@@ -11,8 +11,25 @@ from numpy.typing import NDArray
 from PIL import Image
 
 
-def get_ansi_color_escape_code(r, g, b, background=True):
-    """"""
+def get_ansi_color_code(r, g, b, background=True):
+    """Construct the ANSI escape code for a given RGB color.
+
+    Parameters
+    ----------
+    r : int
+        Red component (0-255).
+    g : int
+        Green component (0-255).
+    b : int
+        Blue component (0-255).
+    background : bool, optional
+        Whether to set as background color (default is True).
+
+    Returns
+    -------
+    str
+        ANSI escape code string.
+    """
     set_as_background = 48
     set_as_foreground = 38
     mode = set_as_background if background else set_as_foreground
@@ -20,7 +37,13 @@ def get_ansi_color_escape_code(r, g, b, background=True):
 
 
 def get_ansi_reset_style_code():
-    """"""
+    """Get the ANSI escape code to reset terminal styles.
+
+    Returns
+    -------
+    str
+        ANSI reset escape code.
+    """
     return "\033[0m"
 
 
